@@ -1,0 +1,170 @@
+.loading-screen-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  /* Deep, rich dark background with a radial gradient for depth */
+  background: radial-gradient(circle at center, #1e293b 0%, #0f172a 40%, #020617 100%);
+  color: #e2e8f0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 9999;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
+  opacity: 1;
+  visibility: visible;
+}
+
+.loading-screen-container.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Container for the signal - adds a subtle glow behind it */
+.signal-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Background pulse effect */
+.signal-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: bgPulse 3s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes bgPulse {
+
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0.8;
+  }
+}
+
+.signal-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: visible;
+  /* Allow glow to spill out */
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
+}
+
+.eeg-wave {
+  stroke: #38bdf8;
+  /* Sky 400 */
+  stroke-width: 3;
+  fill: none;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: drawSignal 2.5s infinite ease-in-out;
+}
+
+/* Add a second, fainter wave for a "ghost" effect */
+.eeg-wave-ghost {
+  stroke: #3b82f6;
+  /* Blue 500 */
+  stroke-width: 1;
+  fill: none;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  opacity: 0.5;
+  animation: drawSignal 2.5s infinite ease-in-out 0.1s;
+  /* Slight delay */
+}
+
+@keyframes drawSignal {
+  0% {
+    stroke-dashoffset: 1000;
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  50% {
+    stroke-dashoffset: 0;
+  }
+
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    stroke-dashoffset: -1000;
+    opacity: 0;
+  }
+}
+
+.loading-text {
+  /* Animation handled by Tailwind utilities mainly, but adding a specific float/pulse here */
+  animation: textFloat 3s infinite ease-in-out;
+}
+
+@keyframes textFloat {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Scanline effect for extra retro-futurism */
+.scanline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(56, 189, 248, 0.1);
+  animation: scanDown 4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes scanDown {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}

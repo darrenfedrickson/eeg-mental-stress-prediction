@@ -1,0 +1,288 @@
+/* Stroop Test - Clinical/Horror Aesthetic */
+.stroop-container {
+    background-color: #020617;
+    /* Very Dark Slate/Black */
+    color: #cbd5e1;
+    font-family: 'Courier New', Courier, monospace;
+    /* Clinical look */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* CRT Scanline Effect */
+.stroop-scanlines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom,
+            rgba(255, 255, 255, 0),
+            rgba(255, 255, 255, 0) 50%,
+            rgba(0, 0, 0, 0.1) 50%,
+            rgba(0, 0, 0, 0.1));
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.stroop-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, transparent 50%, rgba(0, 0, 0, 0.8) 100%);
+    pointer-events: none;
+    z-index: 11;
+}
+
+/* HUD Elements */
+.stroop-panel {
+    border: 1px solid #334155;
+    background: rgba(15, 23, 42, 0.9);
+    padding: 2rem;
+    max-width: 600px;
+    width: 90%;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 20;
+}
+
+.stroop-header {
+    border-bottom: 2px solid #334155;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    text-align: center;
+}
+
+.stroop-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: #e2e8f0;
+    text-transform: uppercase;
+}
+
+.stroop-subtitle {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    letter-spacing: 0.1em;
+    margin-top: 0.5rem;
+}
+
+/* Buttons */
+.stroop-btn {
+    background: transparent;
+    border: 1px solid #475569;
+    color: #e2e8f0;
+    padding: 0.75rem 2rem;
+    font-family: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.2s ease;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.stroop-btn:hover:not(:disabled) {
+    background: #1e293b;
+    border-color: #94a3b8;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(148, 163, 184, 0.2);
+}
+
+.stroop-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* High Score Board */
+.highscore-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+}
+
+.highscore-table th {
+    text-align: left;
+    border-bottom: 1px solid #475569;
+    padding: 0.5rem;
+    color: #94a3b8;
+}
+
+.highscore-table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #1e293b;
+}
+
+.highscore-row:nth-child(1) td {
+    color: #fbbf24;
+    font-weight: bold;
+}
+
+/* Gold */
+.highscore-row:nth-child(2) td {
+    color: #e2e8f0;
+}
+
+/* Silver */
+.highscore-row:nth-child(3) td {
+    color: #b45309;
+}
+
+/* Bronze */
+
+/* Game Text */
+.stroop-word {
+    font-size: 4rem;
+    font-weight: 900;
+    text-align: center;
+    margin: 3rem 0;
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 15px currentColor;
+}
+
+/* Options Grid */
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.options-grid.grid-6 {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* Level 3 Distraction Effects */
+@keyframes glitch-anim {
+    0% {
+        transform: translate(0)
+    }
+
+    20% {
+        transform: translate(-2px, 2px)
+    }
+
+    40% {
+        transform: translate(-2px, -2px)
+    }
+
+    60% {
+        transform: translate(2px, 2px)
+    }
+
+    80% {
+        transform: translate(2px, -2px)
+    }
+
+    100% {
+        transform: translate(0)
+    }
+}
+
+@keyframes flash-screen {
+
+    0%,
+    100% {
+        opacity: 0;
+    }
+
+    5%,
+    15% {
+        opacity: 0.3;
+        background-color: red;
+    }
+
+    30% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 0.1;
+        background-color: white;
+    }
+
+    70% {
+        opacity: 0;
+    }
+}
+
+.distraction-glitch {
+    animation: glitch-anim 0.2s cubic-bezier(.25, .46, .45, .94) both infinite;
+    color: red !important;
+    /* Force text color change during major glitch? Optional */
+}
+
+/* Overlay for random flashes */
+.distraction-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 50;
+    animation: flash-screen 4s infinite random;
+    /* Will use JS to randomize likely */
+}
+
+.option-btn {
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    padding: 1.5rem;
+    font-family: inherit;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.1s;
+}
+
+.option-btn:hover {
+    background: #1e293b;
+    border-color: #64748b;
+}
+
+.option-btn:active {
+    background: #334155;
+}
+
+/* Animations */
+@keyframes flashRed {
+    0% {
+        background-color: rgba(220, 38, 38, 0.5);
+    }
+
+    100% {
+        background-color: transparent;
+    }
+}
+
+@keyframes flashGreen {
+    0% {
+        background-color: rgba(22, 163, 74, 0.5);
+    }
+
+    100% {
+        background-color: transparent;
+    }
+}
+
+.flash-wrong {
+    animation: flashRed 0.3s;
+}
+
+.flash-correct {
+    animation: flashGreen 0.3s;
+}

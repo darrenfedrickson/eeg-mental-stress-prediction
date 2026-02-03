@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+python-multipart
+numpy
+pandas
+scipy
+joblib
+scikit-learn
+torch
+mne
+mne-features
+lime

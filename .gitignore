@@ -2,14 +2,27 @@
 __pycache__/
 *.pyc
 
-# Python models / temporary files
-*.pkl
-
-# Node / frontend
-node_modules/
-dist/
-build/
+# Environment and Data
 .env
+uploads/
+*.log
+
+# Models & Weights (REQUIRED for Render)
+# We allow the specific models directory but keep other pickles ignored
+!backend/models/*.pkl
+!backend/models/*.pth
+!backend/models/*.npy
+
+# Large Assets (Remove from Git to keep repo lean)
+*.mp4
+*.pdf
+
+# Web
+node_modules/
+build/
+dist/
+.vercel
+.next
 
 # OS files
 .DS_Store

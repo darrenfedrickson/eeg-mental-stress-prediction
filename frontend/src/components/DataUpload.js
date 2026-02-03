@@ -1,19 +1,15 @@
 import React, { useState } from "react";
 import FileUploadCard from "./shared/FileUploadCard";
 import ChannelSelector from "./shared/ChannelSelector";
-import PreprocessingOptions from "./shared/PreprocessingOptions";
 import { FiUpload } from "react-icons/fi";
+import API_BASE_URL from "../config";
 
-const DataUpload = ({ setPrediction, setFeatures, setExplanation }) => {
+const DataUpload = ({ setPrediction, setStressScore, setVisualizations, setFeatures, setExplanation, setHeatmap, setActiveTab }) => {
   const [file, setFile] = useState(null);
   const [selectedChannels, setSelectedChannels] = useState([
-    "Fp1", "Fp2", "C3", "C4", "T5", "T6", "O1", "O2"
+    "F3", "FC5", "F8", "Fp1", "F4", "P7", "Fp2", "F7"
   ]);
-  const [preprocessingOptions, setPreprocessingOptions] = useState({
-    filterArtifacts: true,
-    normalizeSignal: true,
-    removeOcular: false,
-  });
+  const [modelType, setModelType] = useState("freqband");
   const [loading, setLoading] = useState(false);
 
   const handleAnalyze = async () => {
@@ -23,20 +19,59 @@ const DataUpload = ({ setPrediction, setFeatures, setExplanation }) => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("channels", JSON.stringify(selectedChannels));
-    formData.append("preprocessing", JSON.stringify(preprocessingOptions));
+    formData.append("model", modelType); // Send selected model
 
     try {
-      const res = await fetch("http://localhost:8000/predict", {
+      const res = await fetch(`${API_BASE_URL}/predict`, {
         method: "POST",
         body: formData,
       });
 
       const data = await res.json();
-      setPrediction(data.level);
-      setFeatures(data.features);
-      setExplanation(data.explanation);
+
+      if (data.status === "success") {
+        console.log("✅ Analysis Complete. Model Used:", data.model_used); // Debug Log
+        setPrediction(data.prediction); // "High", "Medium", "Low"
+        setStressScore(data.stress_score);
+        if (data.visualizations) {
+          setVisualizations(data.visualizations);
+        }
+        // setFeatures(data.features); // Backend doesn't return this yet
+        if (data.explanation) {
+          setExplanation(data.explanation);
+        }
+        if (data.heatmap) {
+          setHeatmap(data.heatmap);
+        }
+
+        // --- SAVE TO HISTORY ---
+        const historyItem = {
+          id: Date.now(),
+          date: new Date().toLocaleString(),
+          fileName: file.name,
+          prediction: data.prediction,
+          score: data.stress_score
+        };
+
+        try {
+          const history = JSON.parse(localStorage.getItem("analysis_history") || "[]");
+          const newHistory = [historyItem, ...history].slice(0, 50); // Keep last 50
+          localStorage.setItem("analysis_history", JSON.stringify(newHistory));
+        } catch (e) {
+          console.error("Failed to save history:", e);
+        }
+
+        // --- AUTO NAVIGATE TO STRESS PREDICTION ---
+        if (setActiveTab) {
+          setActiveTab("prediction");
+        }
+
+      } else {
+        alert("Error: " + data.message);
+      }
     } catch (err) {
       console.error("Upload error:", err);
+      alert("Upload failed.");
     } finally {
       setLoading(false);
     }
@@ -46,8 +81,13 @@ const DataUpload = ({ setPrediction, setFeatures, setExplanation }) => {
     <div className="max-w-6xl mx-auto space-y-6">
       <h2 className="text-2xl font-bold">Data Upload</h2>
 
-      {/* File Upload */}
-      <FileUploadCard file={file} setFile={setFile} />
+      {/* File Upload (Includes Model Select) */}
+      <FileUploadCard
+        file={file}
+        setFile={setFile}
+        modelType={modelType}
+        setModelType={setModelType}
+      />
 
       {/* Channel Selector */}
       <ChannelSelector
@@ -55,20 +95,13 @@ const DataUpload = ({ setPrediction, setFeatures, setExplanation }) => {
         onChannelChange={setSelectedChannels}
       />
 
-      {/* Preprocessing Options */}
-      <PreprocessingOptions
-        options={preprocessingOptions}
-        onOptionChange={setPreprocessingOptions}
-      />
-
-      {/* Single Button */}
+      {/* Upload & Analyze button */}
       <div className="flex justify-end">
         <button
-          className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-white ${
-            loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
-          }`}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-white ${loading
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700"
+            }`}
           onClick={handleAnalyze}
           disabled={loading || !file}
         >

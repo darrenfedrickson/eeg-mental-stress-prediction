@@ -1,3 +1,6 @@
+{/* Advanced options (disabled for demo) */}
+{/* <PreprocessingOptions ... /> */}
+
 import React from "react";
 
 const PreprocessingOptions = ({

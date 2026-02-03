@@ -35,14 +35,12 @@ const ThemeToggle = ({ onToggle }) => {
   return (
     <button
       onClick={toggleTheme}
-      className={`w-14 h-7 flex items-center rounded-full p-1 transition ${
-        darkMode ? "bg-blue-600" : "bg-gray-400"
-      }`}
+      className={`w-14 h-7 flex items-center rounded-full p-1 transition ${darkMode ? "bg-blue-600" : "bg-gray-400"
+        }`}
     >
       <div
-        className={`w-5 h-5 flex items-center justify-center rounded-full bg-white shadow-md transform transition-transform ${
-          darkMode ? "translate-x-7" : "translate-x-0"
-        }`}
+        className={`w-5 h-5 flex items-center justify-center rounded-full bg-white shadow-md transform transition-transform ${darkMode ? "translate-x-7" : "translate-x-0"
+          }`}
       >
         {darkMode ? "🌙" : "☀️"}
       </div>
