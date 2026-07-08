@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import FileUploadCard from "./shared/FileUploadCard";
 import ChannelSelector from "./shared/ChannelSelector";
 import { FiUpload } from "react-icons/fi";
-import API_BASE_URL from "../config";
 
 const DataUpload = () => {
   const [file, setFile] = useState(null);
@@ -24,7 +23,7 @@ const DataUpload = () => {
     formData.append("channels", JSON.stringify(selectedChannels));
 
     try {
-      const res = await fetch(`${API_BASE_URL}/predict`, {
+      const res = await fetch("/predict", {
         method: "POST",
         body: formData,
       });

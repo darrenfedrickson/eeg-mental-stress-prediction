@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.signal import butter, filtfilt
 
-def bandpass_filter(data, lowcut=0.5, highcut=50, fs=256, order=5):
+def bandpass_filter(data, lowcut=0.5, highcut=50, fs=256, order=5, axis=0):
     """
     Apply Butterworth bandpass filter to EEG signals.
     """
@@ -9,7 +9,7 @@ def bandpass_filter(data, lowcut=0.5, highcut=50, fs=256, order=5):
     low = lowcut / nyq
     high = highcut / nyq
     b, a = butter(order, [low, high], btype='band')
-    return filtfilt(b, a, data, axis=0)
+    return filtfilt(b, a, data, axis=axis)
 
 def preprocess_eeg(df, channels=None, filter=True, normalize=True):
     """

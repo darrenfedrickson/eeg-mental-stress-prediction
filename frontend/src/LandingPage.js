@@ -31,11 +31,28 @@ const LandingPage = () => {
             {/* Show Loading Screen until fully removed */}
             {loading && <LoadingScreen fading={fading} text="Welcome!" />}
 
-            {/* Background Mesh (Replaces Video) */}
+            {/* Video Background (Static from public folder) */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-                <div className="absolute inset-0 bg-slate-950/80"></div>
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-900/10 rounded-full blur-[120px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-teal-900/10 rounded-full blur-[120px]" />
+                {/* Fallback color */}
+                <div className="absolute inset-0 bg-slate-900" />
+                <video
+                    key="landing-video"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="auto"
+                    src="/landing_v2.mp4"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ opacity: 0.3 }}
+                />
+                {/* Subtle Overlays */}
+                <div className="absolute inset-0 bg-slate-950/50" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
+
+                {/* Animated Mesh Gradients */}
+                <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-teal-600/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
             </div>
 
             {/* Navbar / Header */}
@@ -50,15 +67,17 @@ const LandingPage = () => {
                     </h1>
                 </div>
 
-                <button
-                    onClick={() => navigate('/app')}
-                    className="group relative px-6 py-2.5 rounded-full bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 transition-all duration-300 font-medium text-sm flex items-center gap-2"
-                >
-                    <span>Try Demo</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                </button>
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => navigate('/app')}
+                        className="group relative px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/40 transition-all duration-300 font-medium text-sm flex items-center gap-2"
+                    >
+                        <span>Try Demo</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </button>
+                </div>
             </header>
 
             {/* Hero Section */}
@@ -86,6 +105,16 @@ const LandingPage = () => {
                     >
                         Get Started Now
                     </button>
+                    <button
+                        onClick={() => navigate('/learn-more')}
+                        className="px-8 py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-lg shadow-xl shadow-black/40 transition-all transform hover:scale-105"
+                    >
+                        Learn More
+                    </button>
+                </div>
+
+                <div className="mt-20 mb-4 italic text-2xl md:text-3xl font-serif text-slate-300 opacity-90 text-center max-w-3xl">
+                    "Mental Health Is Not Optional—It’s <span className="text-blue-400 font-bold not-italic">fundaMental</span>."
                 </div>
 
                 {/* Info Section */}
@@ -102,15 +131,21 @@ const LandingPage = () => {
                     ))}
                 </div>
 
-                <div className="mt-16 w-full max-w-lg">
-                    <h3 className="text-2xl font-bold text-white mb-8">Project Overview</h3>
-                    <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                        <p className="text-slate-400 leading-relaxed">
-                            NeuroStress Insight uses advanced signal processing and deep learning to provide
-                            objective mental health diagnostics.
-                        </p>
+                <div className="mt-32 w-full">
+                    <h3 className="text-3xl font-bold text-white mb-10 text-center">System Impact & Analysis</h3>
+                    <div className="relative w-full max-w-sm mx-auto rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-blue-500/20 aspect-[9/16] bg-slate-900">
+                        <video
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            controls
+                            src="/landing_v2.mp4"
+                            className="w-full h-full object-contain"
+                        />
                     </div>
                 </div>
+
             </main>
         </div>
     );

@@ -1,5 +1,6 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse # Added import
 import uvicorn
 import os
 import numpy as np
@@ -11,7 +12,13 @@ import torch
 # Import preprocessing
 from utils.preprocessing import preprocess_eeg
 # Import new feature extraction functions
-from utils.features import time_series_features, freq_band_features, hjorth_features, fractal_features, entropy_features
+from models.features import (
+    time_series_features, 
+    freq_band_features, 
+    hjorth_features, 
+    fractal_features, 
+    entropy_features
+)
 from models.anfis_3level import ANFIS
 
 # Define folders
@@ -194,9 +201,17 @@ async def predict(
     print(f"🚀 New Analysis Request: {file.filename} using Model: {model.upper()}")
     
     # Save uploaded file
+    filename_lower = file.filename.lower()
+    if not (filename_lower.endswith('.csv') or filename_lower.endswith('.mat')):
+         return JSONResponse(status_code=400, content={"status": "error", "message": "Invalid file type. Please upload a .csv or .mat file."})
+
     filepath = os.path.join(UPLOAD_FOLDER, file.filename)
-    with open(filepath, "wb") as f:
-        f.write(await file.read())
+    try:
+        contents = await file.read()
+        with open(filepath, "wb") as f:
+            f.write(contents)
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"status": "error", "message": "File upload failed. The file may be corrupted."})
 
     try:
         # Parse channels
@@ -252,7 +267,16 @@ async def predict(
             from utils.preprocessing import bandpass_filter
             fs = 128
             # Force 1-50Hz filtering (Strict Protocol)
-            raw_data = bandpass_filter(raw_array, lowcut=1.0, highcut=50.0, fs=fs)
+            raw_data = bandpass_filter(raw_array, lowcut=1.0, highcut=50.0, fs=fs, axis=1)
+            
+            # --- CRITICAL FIX: Z-SCORE NORMALIZATION ---
+            # Model expects normalized signal (mean=0, std=1)
+            # raw_data shape: (n_channels, n_samples)
+            # Normalize Per Channel
+            mean = np.mean(raw_data, axis=1, keepdims=True)
+            std = np.std(raw_data, axis=1, keepdims=True)
+            std[std == 0] = 1.0
+            raw_data = (raw_data - mean) / std
             
             # STANDARD CHANNEL MAP (DEAP 32)
             standard_channels = [
@@ -276,10 +300,23 @@ async def predict(
             # Load CSV into DataFrame (Legacy/Fallback)
             df = pd.read_csv(filepath)
             
+            # --- VALIDATE COLUMNS ---
+            # If channels are selected (or default), ensure they exist in the CSV
+            required_channels = selected_channels if selected_channels else ["F3", "FC5", "F8", "Fp1", "F4", "P7", "Fp2", "F7"]
+            missing_cols = [c for c in required_channels if c not in df.columns]
+            
+            if missing_cols:
+                 return JSONResponse(status_code=400, content={
+                     "status": "error", 
+                     "message": f"CSV Columns Mismatch. Missing channels: {', '.join(missing_cols)}. Please check your file."
+                 })
+            
             print(f"Applying Training Pipeline Filter (1-50Hz) to {file.filename}...")
             # Returns: (n_channels, n_samples)
             fs = 128
-            raw_data = preprocess_eeg(df, channels=selected_channels, filter=True, normalize=False)
+            # FIX: Enable normalize=True
+            raw_data = preprocess_eeg(df, channels=selected_channels, filter=True, normalize=True)
+
         
         n_channels, n_samples = raw_data.shape
         n_secs = n_samples // fs
@@ -417,11 +454,19 @@ async def predict(
         else:
             scaled_feats = selected_feats
             
+        # DEBUG VALUES
+        logging.info(f"DEBUG: Selected Features Shape: {selected_feats.shape}")
+        logging.info(f"DEBUG: Selected Features Sample (First Row): {selected_feats[0, :5]}") # Print first 5
+        logging.info(f"DEBUG: Scaled Features Sample (First Row): {scaled_feats[0, :5]}")
+        
         # 5. Predict
         ts_tensor = torch.tensor(scaled_feats, dtype=torch.float32)
         # Use continuous score (1.95) instead of rounded class (2.0)
         with torch.no_grad():
-            preds = anfis_model(ts_tensor).numpy().flatten()
+            raw_output = anfis_model(ts_tensor).numpy().flatten()
+            logging.info(f"DEBUG: Raw Tensor Output Stats - Min: {np.min(raw_output)}, Max: {np.max(raw_output)}, Mean: {np.mean(raw_output)}")
+            preds = raw_output
+
         
         # Use ROBUST PEAK for detection (Safety Critical but Noise Resistant)
         # Strategy: Take the average of the TOP 3 seconds.
@@ -438,9 +483,10 @@ async def predict(
             
         stress_score = float(final_pred)
         
-        if stress_score < 0.5:
+        # Updated to professional thresholds (0.6 / 1.3)
+        if stress_score <= 0.65:
             stress_level = "Low"
-        elif stress_score < 1.5:
+        elif stress_score <= 1.35:
             stress_level = "Medium"
         else:
             stress_level = "High"
@@ -451,16 +497,16 @@ async def predict(
         viz_signal = []
         if n_channels > 0 and n_samples > 0:
              # Show WHOLE SIGNAL (Downsampled for Performance)
-             channel_idx = 0 
-             full_signal = raw_data[channel_idx, :] 
-             
-             # Target ~1000 points max for UI responsiveness
-             total_points = full_signal.shape[0]
-             step = max(1, total_points // 1000)
-             
-             downsampled_signal = full_signal[::step]
-             # Generate time axis in seconds (Sample Index / 128Hz)
-             viz_signal = [{"time": round(i * step / 128.0, 2), "value": float(v)} for i, v in enumerate(downsampled_signal)]
+              channel_idx = 0 
+              full_signal = raw_data[channel_idx, :] 
+              
+              # Target ~1000 points max for UI responsiveness
+              total_points = full_signal.shape[0]
+              step = max(1, total_points // 1000)
+              
+              downsampled_signal = full_signal[::step]
+              # Generate time axis in seconds (Sample Index / 128Hz)
+              viz_signal = [{"time": round(i * step / 128.0, 2), "value": float(v)} for i, v in enumerate(downsampled_signal)]
 
         # B. Frequency Bands (Average across all channels/seconds)
         # feat_freq shape: (1, n_secs, n_channels*5) -> flattened in earlier step? 
@@ -492,6 +538,23 @@ async def predict(
         
         # 7. Generate Explanations & Heatmap
         explanation = generate_explanation(peak_features_vector.reshape(1, -1), model_key=model)
+        
+        # --- FIX: MAP "ChX" BACK TO "Name" FOR FRONTEND & HEATMAP ---
+        ID_TO_NAME = {v: k for k, v in NAME_TO_ID.items()}
+        cleaned_explanation = []
+        if explanation:
+            for feat_name, weight in explanation:
+                # Handle "ChX_Band" or "ChX_Feature"
+                parts = feat_name.split('_')
+                if len(parts) > 0 and parts[0] in ID_TO_NAME:
+                    real_name = ID_TO_NAME[parts[0]]
+                    new_name = f"{real_name}_{'_'.join(parts[1:])}"
+                    cleaned_explanation.append([new_name, weight])
+                else:
+                    cleaned_explanation.append([feat_name, weight])
+            
+            # Update explanation to use real names
+            explanation = cleaned_explanation
 
         if explanation:
             # Generate Heatmap
@@ -522,16 +585,18 @@ async def predict(
             "details": f"Analyzed {n_secs} seconds of data. Explained Peak at {peak_idx}s."
         }
         
-        # DEBUG OUTPUT
+        # DEBUG OUTPUT TO LOG
         lime_list = output_payload["explanation"]
-        print(f"\n--- DEBUG: PREDICTION COMPARISON ---")
-        print(f"Final Stress Score (Peak): {stress_score:.4f}")
-        print("LIME Explanation (All 10 Features):")
-        for item in lime_list:
-             print(f"  {item[0]:<20} : {item[1]:+.4f}")
-        print("------------------------------------\n")
+        logging.info(f"\n--- DEBUG: PREDICTION COMPARISON ---")
+        logging.info(f"Final Stress Score (Peak): {stress_score:.4f}")
+        logging.info("LIME Explanation (All 10 Features):")
+        if lime_list:
+            for item in lime_list:
+                logging.info(f"  {item[0]:<20} : {item[1]:+.4f}")
+        logging.info("------------------------------------\n")
 
         return output_payload
+
 
     except Exception as e:
         import traceback
@@ -539,5 +604,4 @@ async def predict(
         return {"status": "error", "message": str(e)}
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

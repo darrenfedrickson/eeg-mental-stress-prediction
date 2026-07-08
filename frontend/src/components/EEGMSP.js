@@ -4,7 +4,6 @@ import {
   FiUpload,
   FiActivity,
   FiBarChart2,
-  FiFileText,
   FiMenu,
   FiLogOut,
   FiArrowLeft,
@@ -15,7 +14,6 @@ import Dashboard from "./Dashboard";
 import DataUpload from "./DataUpload";
 import StressPrediction from "./StressPrediction";
 import Explanations from "./Explanations";
-import Reports from "./Reports";
 import ThemeToggle from "./ThemeToggle";
 import brainLogo from "./assets/brain.png";
 
@@ -43,24 +41,17 @@ const EEGMSP = ({ user, onLogin, onLogout, onBackToHome }) => {
           setActiveTab={setActiveTab} // Pass navigation control
         />;
       case "prediction":
-        return <StressPrediction
+        return StressPrediction ? <StressPrediction
           prediction={prediction}
           stressScore={stressScore}
           visualizations={visualizations}
-        />;
+        /> : null;
       case "explanations":
-        return <Explanations
+        return Explanations ? <Explanations
           explanation={explanation}
           heatmap={heatmap}
           stressScore={stressScore}
-        />;
-      case "reports":
-        return <Reports
-          prediction={prediction}
-          stressScore={stressScore}
-          explanation={explanation}
-          heatmap={heatmap}
-        />;
+        /> : null;
       default:
         return <Dashboard setActiveTab={setActiveTab} />;
     }
@@ -179,12 +170,6 @@ const EEGMSP = ({ user, onLogin, onLogout, onBackToHome }) => {
             label={isSidebarOpen ? "Explanations" : ""}
             active={activeTab === "explanations"}
             onClick={() => setActiveTab("explanations")}
-          />
-          <NavigationButton
-            icon={<FiFileText size={18} />}
-            label={isSidebarOpen ? "Reports" : ""}
-            active={activeTab === "reports"}
-            onClick={() => setActiveTab("reports")}
           />
         </div>
 

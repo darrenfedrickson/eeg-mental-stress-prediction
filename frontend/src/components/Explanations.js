@@ -56,11 +56,11 @@ const Explanations = ({ explanation, heatmap, stressScore }) => {
           No explanations available. Please run a prediction first.
         </div>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-8">
 
           {/* LIME Bar Chart */}
           <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-            <h3 className="text-lg font-medium mb-4">Top Feature Risks (LIME)</h3>
+            <h3 className="text-lg font-medium mb-4">Top Influential Brain Features (LIME)</h3>
             <p className="text-sm text-gray-500 mb-4">
               <span className="text-red-500 font-bold">Red bars</span> increase stress score.<br />
               <span className="text-green-500 font-bold">Green bars</span> decrease it.
@@ -72,7 +72,6 @@ const Explanations = ({ explanation, heatmap, stressScore }) => {
                   <XAxis type="number" domain={[-0.004, 0.004]} allowDataOverflow={true} />
                   <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 11 }} />
                   <Tooltip />
-                  <Legend />
                   <Bar dataKey="importance" name="Impact">
                     {data.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -82,6 +81,7 @@ const Explanations = ({ explanation, heatmap, stressScore }) => {
               </ResponsiveContainer>
             </div>
           </div>
+
 
           {/* Heatmap Section */}
           <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md flex flex-col items-center">

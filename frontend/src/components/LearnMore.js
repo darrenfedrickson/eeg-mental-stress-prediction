@@ -57,7 +57,7 @@ const LearnMore = () => {
                             This project is built upon the <strong>SAM-40 (Stress Assessment Model)</strong> dataset, a comprehensive collection of EEG recordings from 40 participants subjected to various stress-inducing tasks.
                         </p>
                         <p className="text-slate-400 leading-relaxed">
-                            The dataset specifically isolates the physiological markers of stress during the <strong>Stroop Color-Word Test</strong>, providing a high-fidelity ground truth for training our predictive models.
+                            The dataset captures physiological markers of stress across four distinct protocols: <strong>Mental Arithmetic</strong>, <strong>Mirror Image Drawing</strong>, <strong>Stroop Color-Word Test</strong>, and <strong>Relaxing (Baseline)</strong>, providing a high-fidelity ground truth for our models.
                         </p>
                     </section>
 
@@ -71,7 +71,7 @@ const LearnMore = () => {
                                         <h3 className="text-xl font-bold text-white">The Stroop Color Test</h3>
                                     </div>
                                     <p className="text-slate-400 mb-6">
-                                        A neuropsychological test widely used to assess the ability to inhibit cognitive interference.
+                                        While our model is trained on the full SAM-40 battery (including Arithmetic and Mirror Drawing), this module lets you experience the <strong>Stroop Test</strong> protocol firsthand.
                                     </p>
 
                                     <div className="bg-slate-950/50 rounded-lg p-4 mb-6 border border-slate-800">

@@ -18,6 +18,9 @@ def generate_topomap(lime_explanation, standard_channels):
         base64_string: PNG image of the topomap
     """
     try:
+        # Use Agg backend to prevent GUI errors on server
+        plt.switch_backend('Agg')
+        
         # 1. Initialize Weights per Channel
         # Default to 0.0 for all 32 channels
         channel_weights = np.zeros(len(standard_channels))
@@ -25,17 +28,17 @@ def generate_topomap(lime_explanation, standard_channels):
         # 2. Map Features to Channels
         # Features are named "ChX_Beta", "ChY_Gamma", etc.
         # We need to sum contributions for each channel.
-        print("DEBUG: Generating Heatmap...")
+        print("DEBUG: Generating Heatmap...") # Reduced noise
         
         for feat_name, weight in lime_explanation:
-            # Parse "Ch1_Beta" -> "Ch1" or "Fz_Beta" -> "Fz"
+            # Parse "Ch1_Beta" or "Fz_Beta" -> "Fz"
             # Assuming format "<Name>_<Band>"
             if "_" in feat_name:
                 parts = feat_name.split("_")
                 prefix = parts[0] # "Ch1" or "Fz"
                 
                 # Method 1: Check for "ChX"
-                if prefix.startswith("Ch"):
+                if prefix.startswith("Ch") and prefix[2:].isdigit():
                     try:
                         idx_str = prefix.replace("Ch", "")
                         ch_idx = int(idx_str) - 1 # 0-indexed
@@ -51,13 +54,26 @@ def generate_topomap(lime_explanation, standard_channels):
                     channel_weights[ch_idx] += weight
 
         # 3. Create MNE Layout
-        # Use standard 10-20 montage
-        montage = mne.channels.make_standard_montage('standard_1020')
+        # Use standard 1005 montage which covers extended channels like FT9, PO9
+        montage = mne.channels.make_standard_montage('standard_1005')
         
         # Filter montage to only our 32 channels
         # We need an Info object
         info = mne.create_info(ch_names=standard_channels, sfreq=128, ch_types='eeg')
-        info.set_montage(montage)
+        
+        # Determine valid channels in montage
+        # If some are missing (e.g. custom names), we should exclude them to prevent crash
+        valid_ch_names = [ch for ch in standard_channels if ch in montage.ch_names]
+        if len(valid_ch_names) != len(standard_channels):
+             print(f"Warning: {len(standard_channels) - len(valid_ch_names)} channels missing from montage.")
+        
+        # Set montage (match_case=False is safer if available, but standard is strict)
+        try:
+            info.set_montage(montage, on_missing='ignore') 
+        except:
+             # Fallback for older MNE versions
+             info.set_montage(montage)
+
         
         # 4. Plot
         fig, ax = plt.subplots(figsize=(10, 10))

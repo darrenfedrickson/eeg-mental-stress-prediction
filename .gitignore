@@ -15,7 +15,9 @@ uploads/
 
 # Large Assets (Remove from Git to keep repo lean)
 *.mp4
+!frontend/public/landing_v2.mp4
 *.pdf
+!frontend/src/components/assets/*.pdf
 
 # Web
 node_modules/
